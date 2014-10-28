@@ -1,1 +1,575 @@
 I have been reading the book Cracking the Coding Interview (5th edition), and wrote the answers in Python.
+前几天看见人人网上分享的一篇日志：
+微软、google、雅虎、百度等各大著名公司的经典面试题！保证搞晕你！！
+http://blog.renren.com/share/222549650/14191806094
+想用python去实现，不确定能不能全部做出来，先试试看吧。
+ 
+微软十五道面试题
+1、有一个整数数组，请求出两两之差绝对值最小的值,
+记住，只要得出最小值即可，不需要求出是哪两个数。
+##############一般解法################
+def foo(data1,data2):
+    min=abs(data1[0]-data2[0])
+    for i in data1:
+        for j in data2:
+            if abs(i-j)<min:
+             min=abs(i-j)
+    return min
+a=[132,43,-1876,565,1]
+b=[85,-63443,569,-1899,135]
+c=foo(a,b)
+print c
+#################oneliner#####################
+>>> a=[132,43,-1876,565,1]
+>>> b=[85,-63443,569,-1899,135]
+>>> c=min(abs(i-j) for i in a for j in b)
+>>> c
+3
+这里有一个技巧，[abs(i-j) for i in a for j in b]会生成一个list，使用大量的存储空间，而(abs(i-j) for i in a for j in b)则产生一个生成器。
+ 
+2、写一个函数，检查字符是否是整数，如果是，返回其整数值。（或者：怎样只用4行代码编写出一个从字符串到长整形的函数？）
+用python解这题很方便，内置函数isdigit()和int()可以实现：
+a=raw_input('a:')
+print type(a)
+print a.isdigit()
+a=int(a)
+print type(a)
+结果如下：
+a:43627856823958612387568912365
+<type'str'>
+True
+<type'long'>
+ 
+3、给出一个函数来输出一个字符串的所有排列。
+这题一看就是各种迭代吧，自然想到一个python标准库--itertools：
+from itertools import permutations
+>>> a='nice'
+>>> for element in list(itertools.permutations(a, 4)):
+        print ''.join(element),' ',
+nice   niec   ncie   ncei   neic   neci   ince   inec   icne   icen   ienc   iecn   cnie   cnei   cine   cien   ceni   cein   enic   enci   einc   eicn   ecni   ecin
+4、给出一个函数来复制两个字符串A和B。字符串A的后几个字节和字符串B的前几个字节重叠
+基本思路：
+先判断两个字符串长度，再使用内置函数a.endswith()或b.startswith()寻找重叠部分。
+a='abcdefghijklmnop'
+b='ijklmnopqrstuvwxyz'
+minlen=min(len(a),len(b))
+i=0
+while i:
+    if a.endswith(b[:i+1]):
+        break
+    else:
+        i+=1
+if i== minlen:
+    newstr=a+b
+else:
+    newstr=a+b[i+1:]
+print newstr
+5、怎样编写一个程序，把一个有序整数数组放到二叉树中？
+6、怎样从顶部开始逐层打印二叉树结点数据？请编程。
+Python的二叉树还没有研究过。。。先放一下。。。
+7、怎样把一个链表掉个顺序（也就是反序，注意链表的边界条件并考虑空链表）？
+使用内置reverse（）函数或者使用a[-1::-1]都可以
+8、请编写能直接实现int atoi(const char * pstr)函数功能的代码。
+不适用int（）函数。考虑两种情况：输入‘1234’，输出1234；输入‘1234.56’，输出‘1234’。
+‘1’肿么转换成1？ord('1')-ord('0')
+def my_atoi(data):
+    integer=data.split('.')[0]
+    result=0
+    for i,ele in enumerate(integer):
+        result+=(ord(ele)-ord('0'))*10**(len(integer)-i-1)
+    return result
+a='1234'
+b='1234.56'
+print my_atoi(a)
+print my_atoi(b)
+10、在排序数组中，找出给定数字的出现次数
+比如 [1, 2, 2, 2, 3] 中2的出现次数是3次。
+内置函数count()
+11、平面上N个点，每两个点都确定一条直线，
+求出斜率最大的那条直线所通过的两个点（斜率不存在的情况不考虑）。时间效率越高越好。
+同样使用itertools库，方便的两两组合N个点
+from itertools import combinations
+A=(1,4)
+B=(2,1)
+C=(4,3)
+D=(5,5)
+E=(8,2)
+name='ABCDE'
+pos=[A,B,C,D,E]
+name_com=combinations(name,2)
+pos_com=combinations(pos,2)
+def cal_rate(data1,data2):
+    return (data1[1]-data2[1])/(data1[0]-data2[0])
+rates=[]
+for ele in list(pos_com):
+    rates.append(cal_rate(ele[0],ele[1]))
+print rates
+print rates.index(max(rates))
+print list(name_com)[rates.index(max(rates))]
+运行结果：
+[-3, -1, 0, -1, 1, 1, 0, 2, -1, -1]
+7
+('C', 'D')   
+12、一个整数数列，元素取值可能是0~65535中的任意一个数，相同数值不会重复出现。0是例外，可以反复出现。
+请设计一个算法，当你从该数列中随意选取5个数值，判断这5个数值是否连续相邻。
+注意：
+- 5个数值允许是乱序的。比如： 8 7 5 0 6
+- 0可以通配任意数值。比如：8 7 5 0 6 中的0可以通配成9或者4
+- 0可以多次出现。
+- 复杂度如果是O(n2)则不得分。
+我的思路：不管有几个零，非零整数两两之差最大值小于等于4。因此做一次循环，求出数列中的最大值和最小值，两者相减即可。这里需要考虑的细节是求出去零以外的最小值以及数列如果全零的情况。
+a=[1,4,5,2,3]
+b=[0,0,0,0,0]
+c=[6,1,0,2,5]
+d=[4,0,7,8,0]
+def foo(data):
+    maxint=max(data)
+    minint=maxint
+    if minint==0:
+        return True
+    else:
+         for i in data:
+            if i<minint:
+                minint=i
+    if maxint-minint<=4:
+        return True
+    else:
+        return False
+   
+print foo(a)  #True
+print foo(b)  #True
+print foo(c)  #False
+print foo(d)  #False
+其实这里还有一个问题，如何产生随机数列，且零能重复，其他数字不能重复。
+from random import randint
+array=[]
+while len(array)<=5:
+    x=randint(0,65535)
+    if x==0 or x not in array:
+        array.append(x)
+13、设计一个算法，找出二叉树上任意两个结点的最近共同父结点。
+复杂度如果是O(n2)则不得分。
+14、一棵排序二叉树，令 f=(最大值+最小值)/2，
+设计一个算法，找出距离f值最近、大于f值的结点。
+复杂度如果是O(n2)则不得分。
+又是二叉树，待我研究研究再整理一个二叉树专题。
+15、一个整数数列，元素取值可能是1~N（N是一个较大的正整数）中的任意一个数，相同数值不会重复出现。
+设计一个算法，找出数列中符合条件的数对的个数，满足数对中两数的和等于N+1。
+复杂度最好是O(n)，如果是O(n2)则不得分。
+同样使用from itertools import combinations，代码就不写了。
+ 
+ 
+小结：肿么说呢，使用python标准库成功避免了算法中最难的部分……伪程序猿就是不断调用别人的程序实现自己的功能呀……
+
+谷歌八道面试题 （谷歌题目果然比较难啊~）
+16、正整数序列Q中的每个元素都至少能被正整数a和b中的一个整除，现给定a和b，需要计算出Q中的前几项，例如，当a=3，b=5，N=6时，序列为3，5，6，9，10，12
+(1)、设计一个函数void generate（int a,int b,int N ,int * Q）计算Q的前几项
+(2)、设计测试数据来验证函数程序在各种输入下的正确性。
+我的思路：利用生成器来产生序列，同时占用内存小。利用next方法取值，将较小的数打印出来。同时要考虑避免重复打印公倍数。
+def generate(a,b,N):
+    set_a=(a*i for i in range(1,N+1))
+    set_b=(b*i for i in range(1,N+1))
+    i=0
+    aa=set_a.next()
+    bb=set_b.next()
+    while i<N:
+        if aa<bb:
+            print aa
+            aa=set_a.next()
+        elif aa>bb:
+            print bb
+            bb=set_b.next()
+        else:
+            print aa
+            aa=set_a.next()
+            bb=set_b.next()
+        i+=1
+17、有一个由大小写组成的字符串，现在需要对他进行修改，将其中的所有小写字母排在大写字母的前面（大写或小写字母之间不要求保持原来次序），如有可能尽量选择时间和空间效率高的算法 c语言函数原型void proc（char *str） 也可以采用你自己熟悉的语言
+这题的方法类似于快速排序
+def quicksort(data,low=0,high=None):
+    newdata=list(data)
+    if high == None:
+        high = len(newdata)
+    i,j=low,high-1
+    while i        while i
+            i+=1
+        while i
+            j-=1
+        newdata[i],newdata[j]=newdata[j],newdata[i]
+        i+=1
+        j-=1
+        quicksort(newdata,i,j)
+    return ''.join(newdata)
+   
+s='nqwjiHUIHUdaJIJOIJdaslmdJOJIJQM'
+print quicksort(s) 
+结果是nqwjidmlsadadIJOIJJUHIUHJOJIJQM
+18、如何随机选取1000个关键字
+给定一个数据流，其中包含无穷尽的搜索关键字（比如，人们在谷歌搜索时不断输入的关键字）。如何才能从这个无穷尽的流中随机的选取1000个关键字？
+这种题目考想法啊，比编程题更高端，网上转的答案如下：（专业词汇叫蓄水库抽样reservoid sampling）
+定义长度为1000的数组。
+　　对于数据流中的前1000个关键字，显然都要放到数组中。
+　　对于数据流中的的第n（n>1000）个关键字，我们知道这个关键字被随机选中的概率为1000/n。所以我们以1000/n的概率用这个关键字去替换数组中的随机一个。这样就可以保证所有关键字都以1000/n的概率被选中。
+　　对于后面的关键字都进行这样的处理，这样我们就可以保证数组中总是保存着1000个随机关键字。
+至于python实现，我想到了random库里的choice函数。
+19、判断一个自然数是否是某个数的平方
+说明：当然不能使用开方运算。
+我的解法：
+def issquare(num):
+    if num<5:
+        if num==0 or num==1 or num==4:
+            return True
+        else:
+            return False
+    else:
+        for i in xrange(num//2+1):
+            if i**2== num:
+                return True
+        return False
+               
+a=10000
+b=5635
+print issquare(a) #True
+print issquare(b) #False
+之所以前面加个<5的判断，是为了减少后面循环的次数。(x/2)^2>x可得x大于4，这样只要进行x/2次循环了。其实这里x/2次循环也很多了，应该还可以改进，暂时没想出来。
+20、给定能随机生成整数1到5的函数，写出能随机生成整数1到7的函数。
+from random import randint
+def ran7():
+    a=randint(1,5)*5+randint(1,5)
+    while a>26:
+        a=randint(1,5)*5+randint(1,5)
+    return (a-3)//3
+21、1024! 末尾有多少个0？
+2因子和5因子相乘产生0，由于2因子个数明显多于5因子，所以计算5因子的个数。25看成5*5，所以有两个5因子，以此类推。
+sum = 0 
+j = 5
+while j <= 1024 :
+   sum += 1024 / j 
+   j*= 5
+print sum
+结果是253
+22、有5个海盗，按照等级从5到1排列，最大的海盗有权提议他们如何分享100枚金币。
+但其他人要对此表决，如果多数反对，那他就会被杀死。
+他应该提出怎样的方案，既让自己拿到尽可能多的金币又不会被杀死？
+（提示：有一个海盗能拿到98%的金币）
+博弈论什么的，对于打dota不靠脸的人来说，这个最不擅长了。
+百度：
+从后向前推，如果1－3号强盗都喂了鲨鱼，只剩4号和5号的话，5号一定投反对票让4号喂鲨鱼，以独吞全部金币。所以，4号惟有支持3号才能保命。3号知道这一点，就会提（100，0，0）的分配方案，对4号、5号一毛不拔而将全部金币归为已有，因为他知道4号一无所获但还是会投赞成票，再加上自己一票，他的方案即可通过。不过，2号推知到3号的方案，就会提出（98，0，1，1）的方案，即放弃3号，而给予4号和5号各一枚金币。由于该方案对于4号和5号来说比在3号分配时更为有利，他们将支持他而不希望他出局而由3号来分配。这样，2号将拿走98枚金币。不过，2号的方案会被1号所洞悉，1号并将提出（97，0，1，2，0）或（97，0，1，0，2）的方案，即放弃2号，而给3号一枚金币，同时给4号（或5号）2枚金币。由于1号的这一方案对于3号和4号（或5号）来说，相比2号分配时更优，他们将投1号的赞成票，再加上1号自己的票，1号的方案可获通过，97枚金币可轻松落入囊中。这无疑是1号能够获取最大收益的方案了
+ 
+23、Google2009华南地区笔试题
+给定一个集合A=[0,1,3,8](该集合中的元素都是在0，9之间的数字，但未必全部包含)，
+指定任意一个正整数K，请用A中的元素组成一个大于K的最小正整数。
+比如，A=[1,0] K=21 那么输出结构应该为100。
+好难啊，想了好久没思路……
+晚上回去写！！！
+想了一段函数，用于判断是否产生进位，即结果是比K的位数多一位的数字。我觉得我的解法不是很简洁，但是网上看了好几段写法，对于进位的边界条件控制不是很好呀……
+A=[0,1,3,8]
+K=21
+def isCarry(Array,digits):
+    MAX_A=max(Array)
+    k_digits=[]
+    j=digits
+    while j>0:
+        k_digits.append(j)
+        j/=10
+    nums=len(k_digits)
+    Flag_internal=False
+    Flag_eq=True
+    i=0
+    while i<nums:
+        if Flag_internal:
+            res=cmp(k_digits[i]+1,MAX_A)
+        else:
+            res=cmp(k_digits[i],MAX_A)
+        if res==-1:
+            Flag_internal=False
+            Flag_eq=False
+        elif res==0:
+            Flag_internal=False
+        else:
+            Flag_eq=False
+            Flag_internal=True
+        i+=1
+    return Flag_internal or Flag_eq
+    
+百度三道面试题
+24、用C语言实现一个revert函数，它的功能是将输入的字符串在原串上倒序后返回。
+对于python来说，交换是个容易的事情。除了reverse（）函数，python有一个奇特的交换表达：
+a,b=b,a
+不需要中间变量哦亲~
+所以原地什么的太容易了。
+25、用C语言实现函数void * memmove(void *dest, const void *src, size_t n)。memmove
+函数的功能是拷贝src所指的内存内容前n个字节到dest所指的地址上。
+python中很少涉及地址的概念，唯一个接近于地址的参数是id()函数的返回值。
+>>> id(a)
+46433224
+>>> b=[3,4,5]
+>>> n=2
+>>> a.append(b[:n])
+>>> a
+[1, 2, 3, [3, 4]]
+>>> id(a)
+46433224
+或者用for循环，也可以。id是不会变的，相当于C语言中的地址不变。
+26、有一根27厘米的细木杆，在第3厘米、7厘米、11厘米、17厘米、23厘米这五个位置上各有一只蚂蚁。
+木杆很细，不能同时通过一只蚂蚁。开始时，蚂蚁的头朝左还是朝右是任意的，它们只会朝前走或调头，但不会后退。
+当任意两只蚂蚁碰头时，两只蚂蚁会同时调头朝反方向走。假设蚂蚁们每秒钟可以走一厘米的距离。
+编写程序，求所有蚂蚁都离开木杆的最小时间和最大时间。
+这个题，哈哈哈，今天同事刚借我一本书----传说中的《编程之美》，里面有解释。两只蚂蚁碰头后转向，也可以看成“擦肩而过”。那么实际上每一只蚂蚁的运动状态就看成独立的了。遍历后求之！
+微软、google、雅虎、百度等各大著名公司的经典面试题！保证搞晕你！！Python实现
+speed=1
+legth=27
+pos=[3,7,11,17,23]
+maxtime=[]
+mintime=[]
+for i in pos:
+    righttime=(27-i)/speed
+    lefttime=i/speed
+    maxtime.append(righttime>lefttime and righttime or lefttime)
+    mintime.append(righttime<lefttime and righttime or lefttime)
+   
+print sum(maxtime)  #100
+print sum(mintime)  #35
+
+腾讯七道面试题
+27、请定义一个宏，比较两个数a、b的大小，不能使用大于、小于、if语句
+28、两个数相乘，小数点后位数没有限制，请写一个高精度算法
+29、有A、B、C、D四个人，要在夜里过一座桥。他们通过这座桥分别需要耗时1、2、5、10分钟，只有一支手电，并且同时最多只能两个人一起过桥。请问，如何安排，能够在17分钟内这四个人都过桥？
+1,2----->           cost 2
+<-------1           cost 1
+5,10---->           cost 10
+<-------2           cost 2
+1,2---->            cost 2
+done                total 17
+30、有12个小球,外形相同,其中一个小球的质量与其他11个不同，
+给一个天平,问如何用3次把这个小球找出来，并且求出这个小球是比其他的轻还是重
+31、在一个文件中有 10G 个整数，乱序排列，要求找出中位数。内存限制为 2G。只写出思路即可。
+32、一个文件中有40亿个整数，每个整数为四个字节，内存为1GB，写出一个算法：求出这个文件里的整数里不包含的一个整数
+33、腾讯服务器每秒有2w个QQ号同时上线，找出5min内重新登入的qq号并打印出来。
+基本是思路题，而且很久以前就看过，年代有点久远了，先忽略了。
+雅虎三道面试题
+34、编程实现：把十进制数(long型)分别以二进制和十六进制形式输出，不能使用printf系列
+mynumber=10
+array2=[]
+while mynumber>0:
+    dig=mynumber%2
+    array2.append(dig)
+    mynumber/=2
+print array2
+print ''.join(str(i) for i in array2[::-1])
+ 
+十六进制的话，再写一个10以上数字到字母的转换就好了~
+ 
+35、编程实现：找出两个字符串中最大公共子字符串,如"abccade","dgcadde"的最大子串为"cad"
+import string
+import itertools
+用itertools产生第一个字符串的所有字串，用string.find()到第二串中寻找，从最长的字串开始，很方便有没有
+36、有双向循环链表结点定义为：
+struct node
+{ 
+  int data;
+  struct node *front,*next;
+};
+有两个双向循环链表A，B，知道其头指针为：pHeadA,pHeadB，请写一函数将两链表中data值相同的结点删除。
+这个的话，还是用C++练习吧~遍历链表，注意双向链表删除时候前后指针的重新指向，应该不难。
+
+联想五道笔试题
+37、设计函数 int atoi(char *s)。
+def atoi(Mystring):
+    return reduce(lambda x,y: x+y,[(ord(value)-ord('0'))*10**(len(Mystring)-i-1) for i,value in \
+                  enumerate(Mystring)])
+
+a='123'
+print atoi(a)   #123
+38、顺时针打印矩阵
+题目：输入一个矩阵，按照从外向里以顺时针的顺序依次打印出每一个数字。
+例如：如果输入如下矩阵：
+1 2 3 4
+5 6 7 8
+9 10 11 12
+13 14 15 16
+则依次打印出数字1, 2, 3, 4, 8, 12, 16, 15, 14, 13, 9, 5, 6, 7, 11, 10。
+这题在python challenge里看到过类似的，一张像素为10000*1的图片要螺旋形组合成100*100，结果成了一只猫，非常神奇啊！这里的解法也类似，用字典保存输出，列表输出。算法很不错，可以学习：
+#creat dict
+Inputdict={}
+num=1
+for i in range(4):
+    for j in range(4):
+        Inputdict[i,j]=num
+        num+=1
+print Inputdict
+#reshape
+dirs=[(1,0),(0,1),(-1,0),(0,-1)]
+step=4
+result=[]
+x,y=-1,0
+for i in range(2*step):
+    dir=dirs[i%4]
+    for j in range(step - (i + 1) // 2):
+        x+=dir[0]
+        y+=dir[1]
+        result.append(Inputdict[x,y])
+print result
+结果：
+[1, 2, 3, 4, 8, 12, 16, 15, 14, 13, 9, 5, 6, 7, 11, 10]
+ 
+39、对称子字符串的最大长度
+题目：输入一个字符串，输出该字符串中对称的子字符串的最大长度。
+比如输入字符串“google”，由于该字符串里最长的对称子字符串是“goog”，因此输出4。
+def is_banlance(mystring):
+    strlen=len(mystring)
+    if mystring[0:strlen/2]==mystring[-1:strlen/2-1:-1]:
+        return True
+    else:
+        return False
+myinputstr='ncklasjabcdefggfedcbaasddsareooinskj'
+def substrlong(inputstr):
+    length=len(inputstr)
+    startpos=0
+    for sublen in range(length-1,0,-1):
+        for startpos in range(length-sublen):
+            if is_banlance(inputstr[startpos:startpos+sublen]):
+                print sublen
+                print inputstr[startpos:startpos+sublen]
+                return sublen
+    return False
+print substrlong(myinputstr)
+结果：
+14
+abcdefggfedcba
+ 
+ 
+40、用1、2、2、3、4、5这六个数字，写一个main函数，打印出所有不同的排列，
+如：512234、412345等，要求："4"不能在第三位，"3"与"5"不能相连.
+import itertools
+res=list(itertools.permutations('12345'))
+for element in itertools.ifilter(lambda x: x[2]<>'4' and abs(x.index('3')-x.index('5'))<>1,res):
+    print ''.join(element),' ', 
+结果:
+12345   12543   13245   13254   14325   14523   15234   15243   21345   21543   23145   23154   24315   24513   25134   25143   31245   31254   31524   31542   32145   32154   32514   32541   34125   34152   34215   34251   34512   34521   41325   41523   42315   42513   43125   43152   43215   43251   45123   45132   45213   45231   51234   51243   51324   51342   52134   52143   52314   52341   54123   54132   54213   54231   54312   54321
+lambda匿名函数的使用~ 方便撒~
+41、微软面试题
+一个有序数列，序列中的每一个值都能够被2或者3或者5所整除，1是这个序列的第一个元素。求第1500个值是多少？
+ from itertools import count
+myarray=(x for x in count(1) if x%2==0 or x%3==0 or x%5==0)
+for i in range(1499):
+    myarray.next()
+print myarray.next()
+结果是2045
+不过这题是一道面试题,规律也比较明显吧,30是2\3\5的最小公倍数,每30个数有22个数字满足,68*22=1496,所以计算得到68*30=2040是第1496个,再往后数4个分别是2042,2043,2044,2045,自然答案就是2045了.
+ 
+总结:这几题都比较有趣哈~
+
+网易五道游戏笔试题
+42、两个圆相交，交点是A1，A2。现在过A1点做一直线与两个圆分别相交另外一点B1，B2。
+B1B2可以绕着A1点旋转。问在什么情况下，B1B2最长。
+微软、google、雅虎、百度等各大著名公司的经典面试题！保证搞晕你！！Python实现！
+B1B2的长度等于B1C+CA1+A1D+DB2=2*CA1+2*A1D=2*CD
+CD最长时，就是B1B2最长的时候。可以解得，CD//O1O2的时候，B1B2最长。
+ 
+43、Smith夫妇召开宴会，并邀请其他4对夫妇参加宴会。在宴会上，他们彼此握手，
+并且满足没有一个人同自己握手，没有两个人握手一次以上，并且夫妻之间不握手。
+然后Mr. Smith问其它客人握手的次数，每个人的答案是不一样的。
+求Mrs Smith握手的次数
+思路：
+MR.S  A1 B1 C1 D1
+MRS.S A2 B2 C2 D2
+1、一共有10个人，出去Smith夫妇，客人有8个。由于每个人握手次数不同，而对于某一位客人来说，由于条件限定，最多可能握手次数为8，所以8位客人的握手次数就是1-8的排列。
+2、假设A1握手8次，B1握手1次，也就是说B1没有和A1以外任何人握手，也就不会和MRS.S握手。这时剩下的人里面最多握手7次，最少握手两次，所以握手两次除了和握手8次和握手7次的人握过手以外，就没和其他人握手，自然也不会和MRS.S握手。以此类推，握手8,7,6,5次的人都和MRS.S握过手，握手1,2,3,4次的人没有。因此，MRS.S的握手次数是4.
+44、有6种不同颜色的球，分别记为1,2,3,4,5,6，每种球有无数个。现在取5个球，求在一下
+的条件下：
+1、5种不同颜色，
+2、4种不同颜色的球，
+3、3种不同颜色的球，
+4、2种不同颜色的球，
+它们的概率
+ 这题用下python解吧。
+ import itertools
+print len(list(itertools.combinations_with_replacement('123456',5)))
+一共有252种可能
+1、5种不同颜色： C(6,5)/252
+2、4种不同颜色的球，C(6,4)*4/252
+3、3种不同颜色的球， C(6,3)*6/252
+4、2种不同颜色的球，C(6,2)*4/252
+45、有一次数学比赛，共有A，B和C三道题目。所有人都至少解答出一道题目，总共有25人。
+在没有答出A的人中，答出B的人数是答出C的人数的两倍；单单答出A的人，比其他答出A的人
+总数多1；在所有只有答出一道题目的人当中，答出B和C的人数刚好是一半。
+求只答出B的人数。
+微软、google、雅虎、百度等各大著名公司的经典面试题！保证搞晕你！！Python实现！
+列出方程，并要求X,Y,Z都是自然数，解得X=4，Y=8，Z=2.连算带蒙，只答出B的有2X-Z=6人
+ 
+46、从尾到头输出链表
+题目：输入一个链表的头结点，从尾到头反过来输出每个结点的值。链表结点定义如下：
+struct ListNode
+{
+int m_nKey;
+ListNode* m_pNext;
+};
+分析：这是一道很有意思的面试题。该题以及它的变体经常出现在各大公司的面试、笔试题中。
+这题C++的，思路很妙啊！
+如果不破坏链表结构，倒序输出得使用栈。而递归就是一种进栈出栈的过程。所以用递归输出每个节点，就可以倒序了！妙啊！
+总结：做游戏，就是喜欢概率题，智力题。
+
+47、金币概率问题（威盛笔试题）
+题目：10个房间里放着随机数量的金币。每个房间只能进入一次，并只能在一个房间中拿金币。
+一个人采取如下策略：前四个房间只看不拿。随后的房间只要看到比前四个房间都多的金币数，
+就拿。否则就拿最后一个房间的金币。?
+编程计算这种策略拿到最多金币的概率。
+ 
+from random import randint
+def pick(array):
+    choice=array[4]
+    i=5
+    while i<10:
+        if array[i]>choice:
+            choice=array[i]
+        i+=1
+    if choice==max(array):
+        return 1
+    else:
+        return 0
+   
+def gen_gold(N):
+    a=[]
+    for i in range(N):
+        a.append(randint(1,10000))
+    return a
+count=0
+for i in range(10000):
+    gold=gen_gold(10)
+    count+=pick(gold)
+print count
+计算的结果大概在0.6左右。
+48、找出数组中唯一的重复元素
+1-1000放在含有1001个元素的数组中，只有唯一的一个元素值重复，其它均只出现一次．
+每个数组元素只能访问一次，设计一个算法，将它找出来；不用辅助存储空间，
+能否设计一个算法实现？
+又是编程之美里的问题：快速找出故障机器。
+容易想到的方法是将数组里的元素相加再减去1+2+。。。+1000的和得到重复出现的数字。
+但是如果数组里的数字太大或者数组太长，会导致溢出。编程之美里所使用的方法是异或，即
+X^X=0，X^0=X。将数组里的数字逐一异或，最后和1^2^3……^1000异或。
+模拟如下：
+import random
+a=[i for i in range(1,1001)]
+a.append(random.randint(1,1001))
+def find_repeat(array):
+    ret=reduce(lambda x,y:x^y,range(1,1001))
+    for i in array:
+        ret^=i
+    return ret
+print find_repeat(a)
+49、08百度校园招聘的一道笔试题
+题目大意如下：
+一排N（最大１Ｍ）个正整数+1递增，乱序排列，第一个不是最小的，把它换成-1，
+最小数为ａ且未知求第一个被-1替换掉的数原来的值，并分析算法复杂度。
+和48题有点类似，我的思路是：
+设置一个min变量，一个res变量，从第二个开始遍历，一边判断是否小于min，一边作异或res。
+等遍历完成后，求得min值和异或值res。此时，将min到min+N异或然后再和res异或，得到被-1代替的值的大小。
+50、一道SPSS笔试题求解
+题目：输入四个点的坐标，求证四个点是不是一个矩形
+关键点：
+1.相邻两边斜率之积等于-1，
+2.矩形边与坐标系平行的情况下，斜率无穷大不能用积判断。
+3.输入四点可能不按顺序，需要对四点排序。
+关键点都列出来了。。。对关键点再进行个排序就是思路吧3按最左点到最右点排序-->2判断是否平行-->1判断斜率之积。
+
